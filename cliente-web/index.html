@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal para Padres - Progreso Académico</title>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #212529;
+            --primary-blue: #0d6efd;
+            --danger-red: #dc3545;
+        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; padding: 40px 20px; }
+        .dashboard { background: var(--card-bg); width: 100%; max-width: 500px; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h1 { font-size: 1.5rem; border-bottom: 2px solid #e9ecef; padding-bottom: 10px; margin-top: 0; }
+        .btn-consultar { background-color: var(--primary-blue); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-size: 1rem; cursor: pointer; font-weight: 600; margin-bottom: 20px; transition: 0.2s; }
+        .btn-consultar:hover { background-color: #0b5ed7; }
+        .info-alumno { background: #e9ecef; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 0.95rem; }
+        .lista-materias { list-style: none; padding: 0; margin: 0; }
+        .materia-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef; }
+        .materia-item:last-child { border-bottom: none; }
+        .alerta-baja { color: var(--danger-red); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <h1>Control Escolar - Padres</h1>
+        <button class="btn-consultar" onclick="consultarProgreso()">Actualizar Calificaciones</button>
+
+        <div id="contenedor-resultados" style="display: none;">
+            <div class="info-alumno">
+                <strong>Estudiante:</strong> <span id="ui-nombre"></span><br>
+                <strong>Periodo:</strong> <span id="ui-periodo"></span>
+            </div>
+            
+            <h3>Desglose de Materias</h3>
+            <ul class="lista-materias" id="ui-lista-materias">
+                </ul>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
