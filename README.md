@@ -1,7 +1,5 @@
 # sistema-escolar-distribuido
 
-# Sistema Escolar Distribuido - Prueba de Concepto (PoC)
-
 Este repositorio contiene la Prueba de Concepto (PoC) para el caso de estudio "Sistema Escuela", desarrollado para la asignatura de Sistemas Distribuidos. El objetivo principal es demostrar la viabilidad de las comunicaciones en un entorno distribuido, cumpliendo con los requerimientos de sincronización, consulta y sistemas de alertas estipulados en el diseño arquitectónico.
 
 ## Arquitectura de la Solución
