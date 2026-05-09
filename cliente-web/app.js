@@ -62,3 +62,15 @@ function renderizarInterfaz(data) {
         listaMaterias.appendChild(li);
     });
 }
+
+async function sincronizarBatch() {
+    try {
+        const res = await fetch('http://localhost:8080/api/batch/sincronizar',
+            { method: 'POST' });
+        const data = await res.json();
+        console.log('[gRPC Batch] Respuesta:', data);
+        alert('Batch enviado. Revisa la consola del Mock SCE (Terminal 2).');
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}

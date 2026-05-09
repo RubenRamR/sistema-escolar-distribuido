@@ -4,8 +4,8 @@
  */
 package com.itson.servidor_central.controllers;
 
-import com.itson.servidorcentral.models.CalificacionDTO;
-import com.itson.servidorcentral.websockets.AlertasHandler;
+import com.itson.servidor_central.models.CalificacionDTO;
+import com.itson.servidor_central.websockets.AlertasHandler;
 import java.util.List;
 import java.util.Map;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -38,18 +38,13 @@ public class ProgresoController {
             CalificacionDTO respuestaMoodle = restTemplate.getForObject(urlMoodleMock, CalificacionDTO.class);
             
             if (respuestaMoodle != null && respuestaMoodle.materias != null) {
-                // Convertimos el objeto a una lista manejable
-                List<Map<String, Object>> materias = (List<Map<String, Object>>) respuestaMoodle.materias;
-                
-                for (Map<String, Object> materia : materias) {
-                    double calificacion = Double.parseDouble(materia.get("calificacion").toString());
-                    
-                    // Si reprueba, enviamos el mensaje Push
-                    if (calificacion < 6.0) {
-                        String nombreMateria = materia.get("nombre").toString();
-                        String mensajeAlerta = "¡Atención! Rendimiento bajo detectado en " + nombreMateria + " (Calificación: " + calificacion + ")";
-                        
-                        System.out.println("[Servidor Central] Disparando alerta asíncrona por WebSocket...");
+                for (CalificacionDTO.MateriaDTO materia : respuestaMoodle.materias) {
+                    if (materia.calificacion < 6.0) {
+                        String mensajeAlerta = "¡Atención! Rendimiento bajo detectado en "
+                                + materia.nombre
+                                + " (Calificación: " + materia.calificacion + ")";
+
+                        System.out.println("[Servidor Central] Disparando alerta por WebSocket...");
                         alertasHandler.enviarAlertaPush(mensajeAlerta);
                     }
                 }
