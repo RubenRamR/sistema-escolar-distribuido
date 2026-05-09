@@ -23,9 +23,3 @@
 /mocks/node_modules/cookie-signature/nbproject/private/
 /mocks/node_modules/dunder-proto/nbproject/private/
 /mocks/node_modules/fresh/nbproject/private/
-node_modules/
-target/
-build/
-.netbeans/
-nb-configuration.xml
-dist/
