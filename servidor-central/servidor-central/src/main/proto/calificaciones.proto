@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option java_package = "com.itson.servidor_central.grpc";
+option java_outer_classname = "CalificacionesProto";
+option java_multiple_files = false;
+
+service SincronizadorSCE {
+  rpc EnviarLoteCalificaciones (LoteRequest) returns (LoteResponse);
+}
+
+message CalificacionItem {
+  string materia = 1;
+  string estudiante = 2;
+  double calificacion = 3;
+}
+
+message LoteRequest {
+  repeated CalificacionItem items = 1;
+  string timestamp = 2;
+}
+
+message LoteResponse {
+  bool exito = 1;
+  int32 registros_procesados = 2;
+  string mensaje = 3;
+}

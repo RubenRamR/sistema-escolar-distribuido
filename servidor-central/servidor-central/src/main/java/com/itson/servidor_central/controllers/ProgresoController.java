@@ -4,7 +4,10 @@
  */
 package com.itson.servidor_central.controllers;
 
-import com.itson.servidorcentral.models.CalificacionDTO;
+import com.itson.servidor_central.models.CalificacionDTO;
+import com.itson.servidor_central.websockets.AlertasHandler;
+import java.util.List;
+import java.util.Map;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,26 +21,39 @@ import org.springframework.web.client.RestTemplate;
 @CrossOrigin(origins = "*")
 public class ProgresoController {
 
+    private final AlertasHandler alertasHandler;
+
+    public ProgresoController(AlertasHandler alertasHandler) {
+        this.alertasHandler = alertasHandler;
+    }
+
     @GetMapping("/api/padres/progreso")
     public Object obtenerProgresoAcademico() {
         System.out.println("[Servidor Central] Recibiendo petición de la App Móvil/Web...");
-
-        // El Servidor Central actúa como cliente para consultar al Mock de Moodle
+        
         String urlMoodleMock = "http://localhost:9090/api/calificaciones";
         RestTemplate restTemplate = new RestTemplate();
-
-        try
-        {
-            System.out.println("[Servidor Central] Consultando al Sistema Externo Moodle...");
-            // Petición GET síncrona al Mock 
+        
+        try {
             CalificacionDTO respuestaMoodle = restTemplate.getForObject(urlMoodleMock, CalificacionDTO.class);
+            
+            if (respuestaMoodle != null && respuestaMoodle.materias != null) {
+                for (CalificacionDTO.MateriaDTO materia : respuestaMoodle.materias) {
+                    if (materia.calificacion < 6.0) {
+                        String mensajeAlerta = "¡Atención! Rendimiento bajo detectado en "
+                                + materia.nombre
+                                + " (Calificación: " + materia.calificacion + ")";
 
-            System.out.println("[Servidor Central] Datos obtenidos correctamente. Devolviendo a la App.");
+                        System.out.println("[Servidor Central] Disparando alerta por WebSocket...");
+                        alertasHandler.enviarAlertaPush(mensajeAlerta);
+                    }
+                }
+            }
+
             return respuestaMoodle;
-
-        } catch (Exception e)
-        {
-            System.err.println("Error de comunicación con Moodle: " + e.getMessage());
+            
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
             return "{\"error\": \"No se pudo conectar con el sistema de calificaciones\"}";
         }
     }
