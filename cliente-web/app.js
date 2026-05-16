@@ -74,3 +74,34 @@ async function sincronizarBatch() {
         alert('Error: ' + e.message);
     }
 }
+
+async function avalarTarea() {
+    try {
+        const response = await fetch('http://localhost:8080/api/interacciones/avalar-tarea', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idTarea: "T-998", firmaPadre: "Aprobado" })
+        });
+        const data = await response.json();
+        alert("Éxito: " + data.mensaje);
+    } catch (error) {
+        alert("Error al avalar la tarea: " + error.message);
+    }
+}
+
+async function enviarMensaje() {
+    const mensaje = prompt("Escribe el mensaje para el profesor de Sistemas Distribuidos:");
+    if (!mensaje) return;
+
+    try {
+        const response = await fetch('http://localhost:8080/api/interacciones/mensaje', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idProfesor: "P-101", contenido: mensaje })
+        });
+        const data = await response.json();
+        alert("Éxito: " + data.mensaje);
+    } catch (error) {
+        alert("Error al enviar el mensaje: " + error.message);
+    }
+}

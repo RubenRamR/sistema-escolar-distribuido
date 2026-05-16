@@ -23,22 +23,28 @@ public class BatchController {
 
     @PostMapping("/api/batch/sincronizar")
     public String sincronizarConSCE() {
-        System.out.println("[Batch] Recibida petición de sincronización batch...");
+        System.out.println("\n[Batch] Recibida petición de sincronización batch...");
 
         RestTemplate restTemplate = new RestTemplate();
         String urlMoodle = "http://localhost:9090/api/calificaciones";
 
         try {
-            CalificacionDTO datos = restTemplate
-                    .getForObject(urlMoodle, CalificacionDTO.class);
+            CalificacionDTO datos = restTemplate.getForObject(urlMoodle, CalificacionDTO.class);
 
-            // datos.materias sigue siendo Object — el Service hace el cast interno
+            boolean maestroHistoriaAtrasado = true; // Simulación lógica
+            if (maestroHistoriaAtrasado) {
+                System.err.println("[ALERTA ADMINISTRATIVA] Se detectó que el profesor de 'Historia' no ha subido calificaciones en el tiempo acordado. Registrando reporte en el sistema...");
+            }
+
             sincronizador.enviarLote(datos.materias, datos.nombre);
-            return "{\"status\": \"lote enviado al SCE\"}";
+            
+            System.out.println("[Batch] Lote procesado y transmitido vía gRPC exitosamente.\n");
+            
+            return "{\"status\": \"success\", \"mensaje\": \"Lote enviado al SCE correctamente. Alertas de maestros procesadas.\"}";
 
         } catch (Exception e) {
-            System.err.println("[Batch] Error: " + e.getMessage());
-            return "{\"error\": \"" + e.getMessage() + "\"}";
+            System.err.println("[Batch] Error en la sincronización: " + e.getMessage());
+            return "{\"status\": \"error\", \"mensaje\": \"" + e.getMessage() + "\"}";
         }
     }
 }
