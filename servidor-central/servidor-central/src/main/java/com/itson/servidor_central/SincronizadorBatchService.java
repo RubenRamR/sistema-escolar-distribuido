@@ -28,42 +28,48 @@ public class SincronizadorBatchService {
     public void enviarLote(List<CalificacionDTO.MateriaDTO> materias, String estudiante) {
         System.out.println("[gRPC] Iniciando sincronización batch con SCE...");
 
-        ManagedChannel channel = ManagedChannelBuilder
-                .forAddress(SCE_HOST, SCE_PORT)
-                .usePlaintext()
-                .build();
+        ManagedChannel channel = null;
+        try
+        {
 
-        try {
-            // SincronizadorSCEGrpc es clase independiente, no anidada en CalificacionesProto
-            SincronizadorSCEGrpc.SincronizadorSCEBlockingStub stub =
-                    SincronizadorSCEGrpc.newBlockingStub(channel);
+            channel = crearCanalSeguro();
 
-            CalificacionesProto.LoteRequest.Builder builder =
-                    CalificacionesProto.LoteRequest.newBuilder()
+            SincronizadorSCEGrpc.SincronizadorSCEBlockingStub stub
+                    = SincronizadorSCEGrpc.newBlockingStub(channel);
+
+            CalificacionesProto.LoteRequest.Builder builder
+                    = CalificacionesProto.LoteRequest.newBuilder()
                             .setTimestamp(java.time.LocalDateTime.now().toString());
 
-            for (CalificacionDTO.MateriaDTO m : materias) {
+            for (CalificacionDTO.MateriaDTO m : materias)
+            {
                 builder.addItems(
-                    CalificacionesProto.CalificacionItem.newBuilder()
-                        .setMateria(m.nombre)
-                        .setEstudiante(estudiante)
-                        .setCalificacion(m.calificacion)
-                        .build()
+                        CalificacionesProto.CalificacionItem.newBuilder()
+                                .setMateria(m.nombre)
+                                .setEstudiante(estudiante)
+                                .setCalificacion(m.calificacion)
+                                .build()
                 );
             }
 
-            CalificacionesProto.LoteResponse response =
-                    stub.enviarLoteCalificaciones(builder.build());
+            CalificacionesProto.LoteResponse response
+                    = stub.enviarLoteCalificaciones(builder.build());
 
             System.out.println("[gRPC] Respuesta SCE: " + response.getMensaje());
             System.out.println("[gRPC] Registros procesados: " + response.getRegistrosProcesados());
 
-        } catch (Exception e) {
+        } catch (Exception e)
+        {
             System.err.println("[gRPC] Error al contactar SCE: " + e.getMessage());
-        } finally {
+        } finally
+        {
             channel.shutdown();
-            try { channel.awaitTermination(5, TimeUnit.SECONDS); }
-            catch (InterruptedException ignored) {}
+            try
+            {
+                channel.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException ignored)
+            {
+            }
         }
     }
 
@@ -71,11 +77,11 @@ public class SincronizadorBatchService {
     public ManagedChannel crearCanalSeguro() throws SSLException, IOException {
         // Apuntamos al certificado que acabamos de generar utilizando openssl
         File certChainFile = new ClassPathResource("server.crt").getFile();
-        
+
         return NettyChannelBuilder.forAddress("localhost", 50051)
                 // Configurar contexto SSL para que confie en el cerftificado autofirmado
                 .sslContext(GrpcSslContexts.forClient().trustManager(certChainFile).build())
                 .build();
     }
-    
+
 }

@@ -22,13 +22,25 @@
         .materia-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e9ecef; }
         .materia-item:last-child { border-bottom: none; }
         .alerta-baja { color: var(--danger-red); font-weight: bold; }
+        .input-login { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
     </style>
     </head>
     <body>
 
-        <div class="dashboard">
-            <h1>Control Escolar - Padres</h1>
+        <div id="seccion-login" class="dashboard">
+            <h1>Iniciar Sesión</h1>
+            <p style="font-size: 0.9rem; color: #666;">Ingrese credenciales de
+                padre de familia.</p>
+            <input type="text" id="in-usuario" class="input-login"
+                placeholder="Usuario (ej. padre123)">
+            <input type="password" id="in-password" class="input-login"
+                placeholder="Contraseña (ej. admin)">
+            <button class="btn-consultar" onclick="iniciarSesion()">Entrar al
+                Portal</button>
+        </div>
 
+        <div id="seccion-dashboard" class="dashboard" style="display: none;">
+            <h1>Control Escolar - Padres</h1>
             <button class="btn-consultar"
                 onclick="consultarProgreso()">Actualizar Calificaciones</button>
 
@@ -40,8 +52,7 @@
                 </div>
 
                 <h3>Desglose de Materias</h3>
-                <ul class="lista-materias" id="ui-lista-materias">
-                </ul>
+                <ul class="lista-materias" id="ui-lista-materias"></ul>
 
                 <div
                     style="margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 6px;">
@@ -61,8 +72,7 @@
 
             <div
                 style="margin-top:20px; padding-top:16px; border-top:1px solid #e9ecef;">
-                <button class="btn-consultar"
-                    style="background-color:#198754;"
+                <button class="btn-consultar" style="background-color:#198754;"
                     onclick="sincronizarBatch()">
                     Sincronizar Batch con SCE (gRPC)
                 </button>

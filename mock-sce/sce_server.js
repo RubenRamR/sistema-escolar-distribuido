@@ -1,74 +1,69 @@
-const grpc = require('@grpc/grpc-js');
+const grpc = require("@grpc/grpc-js");
 const fs = require("fs");
-const protoLoader = require('@grpc/proto-loader');
-const path = require('path');
+const protoLoader = require("@grpc/proto-loader");
+const path = require("path");
 
-// Leer los certificados
-const serverCert = fs.readFileSync('./server.crt');
-const serverKey = fs.readFileSync('./server.key');
+// 1. Leer los certificados OpenSSL generados
+const serverCert = fs.readFileSync("./server.crt");
+const serverKey = fs.readFileSync("./server.key");
 
-// Crear credenciales SSL
-const credentials = grpc.ServerCredentials.createSsl(null, [{
+// 2. Crear credenciales SSL
+const credentials = grpc.ServerCredentials.createSsl(null, [
+  {
     cert_chain: serverCert,
-    private_key: serverKey
-}]);
+    private_key: serverKey,
+  },
+]);
 
-// Levantar servidor seguro
-server.bindAsync('0.0.0.0:50051', credentials, (err, port) => {
-    if (err) {
-        console.error("Error al iniciar: ", err);
-        return;
-    }
-    console.log(`SCE Mock Server corriendo de forma segura en el puerto ${port}`);
-    server.start();
-});
-
-const PROTO_PATH = path.join(
-    __dirname,
-    '../servidor-central/servidor-central/src/main/proto/calificaciones.proto'
-);
+// 3. Cargar el archivo Proto (Ahora busca en la misma carpeta)
+const PROTO_PATH = path.join(__dirname, "./calificaciones.proto");
 
 const packageDef = protoLoader.loadSync(PROTO_PATH, {
-    keepCase: true,
-    longs: String,
-    enums: String,
-    defaults: true,
-    oneofs: true
+  keepCase: true,
+  longs: String,
+  enums: String,
+  defaults: true,
+  oneofs: true,
 });
 
 const proto = grpc.loadPackageDefinition(packageDef);
 
+// 4. Lógica de negocio (Prueba de concepto)
 function enviarLoteCalificaciones(call, callback) {
-    const lote = call.request;
+  const lote = call.request;
 
-    console.log('\n[Mock SCE] ══════════ LOTE RECIBIDO ══════════');
-    console.log(`[Mock SCE] Timestamp : ${lote.timestamp}`);
-    console.log(`[Mock SCE] Registros : ${lote.items.length}`);
-    lote.items.forEach((item, i) => {
-        console.log(
-            `[Mock SCE]   ${i + 1}. ${item.estudiante} | ` +
-            `${item.materia} | Cal: ${item.calificacion}`
-        );
-    });
-    console.log('[Mock SCE] ════════════════════════════════════\n');
+  console.log("\n[Mock SCE] ══════════ LOTE RECIBIDO (TLS) ══════════");
+  console.log(`[Mock SCE] Timestamp : ${lote.timestamp}`);
+  console.log(`[Mock SCE] Registros : ${lote.items.length}`);
+  lote.items.forEach((item, i) => {
+    console.log(
+      `[Mock SCE]   ${i + 1}. ${item.estudiante} | ` +
+        `${item.materia} | Cal: ${item.calificacion}`,
+    );
+  });
+  console.log("[Mock SCE] ══════════════════════════════════════════\n");
 
-    callback(null, {
-        exito: true,
-        registros_procesados: lote.items.length,
-        mensaje: `SCE procesó ${lote.items.length} registros correctamente`
-    });
+  callback(null, {
+    exito: true,
+    registros_procesados: lote.items.length,
+    mensaje: `SCE procesó ${lote.items.length} registros correctamente por canal seguro`,
+  });
 }
 
+// 5. Crear el servidor gRPC
 const server = new grpc.Server();
+
 server.addService(proto.SincronizadorSCE.service, {
-    EnviarLoteCalificaciones: enviarLoteCalificaciones
+  EnviarLoteCalificaciones: enviarLoteCalificaciones,
 });
 
-server.bindAsync(
-    '0.0.0.0:50051',
-    grpc.ServerCredentials.createInsecure(),
-    (err, port) => {
-        if (err) { console.error('[Mock SCE] Error:', err); return; }
-        console.log(`[Mock SCE] Servidor gRPC escuchando en :${port}`);
-    }
-);
+// 6. Levantar el servidor de forma SEGURA en el puerto 50051
+server.bindAsync("0.0.0.0:50051", credentials, (err, port) => {
+  if (err) {
+    console.error("[Mock SCE] Error al iniciar: ", err);
+    return;
+  }
+  console.log(
+    `[Mock SCE] Servidor gRPC corriendo de forma SEGURA (TLS) en el puerto ${port}`,
+  );
+});
