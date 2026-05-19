@@ -9,9 +9,15 @@ import com.itson.servidor_central.grpc.SincronizadorSCEGrpc;  // import separado
 import com.itson.servidor_central.models.CalificacionDTO;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import java.io.File;
+import java.io.IOException;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.SSLException;
+import org.springframework.core.io.ClassPathResource;
 
 @Service
 public class SincronizadorBatchService {
@@ -60,4 +66,16 @@ public class SincronizadorBatchService {
             catch (InterruptedException ignored) {}
         }
     }
+
+    // Utiliza el certificado de OpenSSL para crear de conexion seguro
+    public ManagedChannel crearCanalSeguro() throws SSLException, IOException {
+        // Apuntamos al certificado que acabamos de generar utilizando openssl
+        File certChainFile = new ClassPathResource("server.crt").getFile();
+        
+        return NettyChannelBuilder.forAddress("localhost", 50051)
+                // Configurar contexto SSL para que confie en el cerftificado autofirmado
+                .sslContext(GrpcSslContexts.forClient().trustManager(certChainFile).build())
+                .build();
+    }
+    
 }
