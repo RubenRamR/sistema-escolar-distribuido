@@ -105,3 +105,51 @@ async function enviarMensaje() {
         alert("Error al enviar el mensaje: " + error.message);
     }
 }
+
+// -- Iniciar sesion antes de consumir otros servicios (JWT/TLS) --
+
+let jwtToken = null;
+
+// 1. Funcion para iniciar sesion falso
+async function iniciarSesion() {
+    try {
+        const response = await fetch('http://localhost:8080/login', {
+            method: 'POST'
+        });
+        const data = await response.json();
+        jwtToken = data.token;
+        console.log("JWT obtenido: ", jwtToken);
+
+        // Una vez con el token, iniciamos el WebSocket y permitimos las peticiones REST
+        iniciarWebSocket();
+    } catch (error) {
+        console.error("Error al iniciar sesion: ", error);
+    }
+}
+
+// 2. Modificacion de tus Fetch (ejemplo de como enviar el token)
+async function enviarInteraccion() {
+    if (!jwtToken) return alert("No has iniciado sesion");
+
+    await fetch('http://localhost:8080/api/interacciones', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwtToken}` // Aqui se adjunta el JWT
+        },
+        body: JSON.stringify({ /* TODO: Aqui ira el payload */ })
+    });
+}
+
+// 3. Modificacion del WebSocket (pasando el token por parametro de consulta)
+function iniciarWebSocket() {
+    // La API nativa de WebSocket en el navegador no soporta headers personalizados.
+    // el estandar es evitarlo como parametro o en el primer mensaje.
+    const ws = new WebSocket(`ws://localhost:8080/alertas?token=${jwtToken}`);
+
+    ws.onopen = () => console.log("WebSocket seguro conectado");
+    ws.onmessage = (event) => console.log("Alerta recibida: ", event.data);
+}
+
+// Llamar al inicio de sesion al iniciar la pagina
+iniciarSesion();
