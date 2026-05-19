@@ -1,6 +1,27 @@
 const grpc = require('@grpc/grpc-js');
+const fs = require("fs");
 const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
+
+// Leer los certificados
+const serverCert = fs.readFileSync('./server.crt');
+const serverKey = fs.readFileSync('./server.key');
+
+// Crear credenciales SSL
+const credentials = grpc.ServerCredentials.createSsl(null, [{
+    cert_chain: serverCert,
+    private_key: serverKey
+}]);
+
+// Levantar servidor seguro
+server.bindAsync('0.0.0.0:50051', credentials, (err, port) => {
+    if (err) {
+        console.error("Error al iniciar: ", err);
+        return;
+    }
+    console.log(`SCE Mock Server corriendo de forma segura en el puerto ${port}`);
+    server.start();
+});
 
 const PROTO_PATH = path.join(
     __dirname,
