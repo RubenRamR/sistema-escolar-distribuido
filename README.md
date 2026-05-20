@@ -1,63 +1,240 @@
-# sistema-escolar-distribuido
+# Sistema Escolar Distribuido
 
-Este repositorio contiene la Prueba de Concepto (PoC) para el caso de estudio "Sistema Escuela", desarrollado para la asignatura de Sistemas Distribuidos. El objetivo principal es demostrar la viabilidad de las comunicaciones en un entorno distribuido, cumpliendo con los requerimientos de sincronización, consulta y sistemas de alertas estipulados en el diseño arquitectónico.
+Este repositorio contiene la **Prueba de Concepto (PoC)** para el caso de estudio **"Sistema Escuela"**, desarrollado para la asignatura de **Sistemas Distribuidos**.
 
-## Arquitectura de la Solución
+El objetivo principal es demostrar la viabilidad de las comunicaciones en un entorno distribuido, cumpliendo con los requerimientos de:
 
-El sistema implementa un enfoque de integración distribuida mediante tres nodos principales independientes:
+- Sincronización
+- Consulta
+- Alertas
+- Seguridad estricta
 
-1. Mock Moodle (Node.js - Puerto 9090): Actúa como el sistema de legado proveedor de datos. Expone un endpoint REST para proveer el estatus académico y las calificaciones estáticas de los alumnos.
-2. Servidor Central / API Gateway (Spring Boot - Puerto 8080): Nodo intermediario y núcleo de la lógica de negocio. Consume el Mock de Moodle mediante peticiones síncronas (HTTP/REST) e implementa un patrón observador (WebSockets) para evaluar el rendimiento y notificar eventos asíncronos.
-3. Cliente Web (HTML/JS/CSS): Interfaz de usuario ligera (simulador de la App para padres) que consume el API Gateway vía fetch y mantiene una conexión persistente bidireccional para recibir alertas en tiempo real.
+Todo esto mediante una arquitectura orquestada con contenedores.
 
-## Requisitos Previos
+---
 
-Para ejecutar este proyecto en un entorno local, es necesario contar con el siguiente software instalado:
+# Arquitectura de la Solución
 
-- Node.js (v14 o superior)
-- Java Development Kit (JDK) 21
-- Maven (Integrado en el proyecto mediante el Wrapper de Spring Boot)
-- Navegador Web moderno (Chrome, Edge, Firefox)
+El sistema implementa un enfoque de integración distribuida mediante tres contenedores backend interconectados en una red virtual aislada (`escuela-net`) y un cliente externo.
 
-## Instrucciones de Ejecución
+## Componentes del Sistema
 
-Para levantar el entorno distribuido correctamente, los nodos deben inicializarse en el siguiente orden para evitar errores de conexión:
+### Mock Moodle (Node.js - Puerto 9090)
 
-### Paso 1: Iniciar el Mock de Moodle (Proceso en Segundo Plano)
+Actúa como el sistema de legado proveedor de datos.
 
-Este proceso simula el sistema externo de calificaciones.
+Expone un endpoint REST para proveer:
 
-1. Abre una terminal y navega al directorio del mock:
-   `cd mocks`
-2. Instala las dependencias necesarias:
-   `npm install`
-3. Ejecuta el servidor:
-   `node moodle_mock.js`
+- Estatus académico
+- Calificaciones de los alumnos
 
-El servidor indicará en la consola que está escuchando en `http://localhost:9090`. Mantenlo en ejecución.
+---
 
-### Paso 2: Iniciar el Servidor Central (Lógica y API Gateway)
+### Servidor Central / API Gateway (Spring Boot - Puerto 8080)
 
-Este proceso levanta la aplicación Java y el servidor web embebido.
+Nodo intermediario y núcleo de la lógica de negocio.
 
-1. Abre una nueva pestaña en la terminal y navega al directorio del servidor central:
-   `cd servidor-central`
-2. Ejecuta la aplicación utilizando el Wrapper de Maven:
-   En Windows:
-   `mvnw.cmd spring-boot:run`
-   En macOS/Linux:
-   `./mvnw spring-boot:run`
+Responsabilidades:
 
-El servidor Tomcat se inicializará y la consola mostrará que está corriendo en el puerto `8080`. Mantenlo en ejecución.
+- Orquestar peticiones
+- Validar seguridad
+- Consumir servicios de Moodle
+- Enviar alertas en tiempo real
+- Ejecutar procesos Batch nocturnos
 
-### Paso 3: Ejecutar el Cliente Web (Interfaz de Usuario)
+---
 
-1. Utiliza el explorador de archivos de tu sistema operativo para navegar a la carpeta `cliente-web`.
-2. Haz doble clic en el archivo `index.html` para abrirlo directamente en tu navegador web predeterminado (la URL mostrará la ruta local del archivo, ej. `file:///.../index.html`).
-3. Abre las herramientas de desarrollador del navegador (F12) en la pestaña "Consola" para verificar la conexión exitosa del WebSocket.
-4. Haz clic en el botón "Actualizar Calificaciones" para probar el flujo de comunicación distribuida completo.
+### Mock SCE - Control Escolar (Node.js - Puerto 50051)
 
-## Protocolos de Comunicación Implementados
+Simula el sistema central de la secretaría académica.
 
-- REST / JSON: Utilizado para la comunicación síncrona en el flujo de consulta (Cliente -> Servidor Central -> Mock Moodle). Elegido por su bajo acoplamiento y estandarización en servicios web.
-- WebSockets: Utilizado para la comunicación asíncrona (Push) desde el Servidor Central hacia el Cliente. Elegido para implementar el patrón observador y enviar alertas de bajo rendimiento en tiempo real sin requerir peticiones continuas (polling) por parte del cliente.
+Expone un servidor **gRPC** fuertemente tipado para recibir lotes masivos de calificaciones mediante un túnel cifrado.
+
+---
+
+### Cliente Web (HTML / JS / CSS)
+
+Interfaz ligera de usuario (simulador de la app para padres).
+
+Funciones principales:
+
+- Consumir el API Gateway
+- Mantener conexión persistente bidireccional
+- Recibir alertas en tiempo real
+
+---
+
+# Requisitos Previos
+
+Gracias a la contenedorización, no es necesario instalar lenguajes ni frameworks en la máquina local.
+
+Solo necesitas:
+
+- Docker y Docker Compose  
+  _(Recomendado: Docker Desktop)_
+
+- Navegador web moderno:
+  - Chrome
+  - Edge
+  - Firefox
+
+---
+
+# Instrucciones de Ejecución
+
+El levantamiento del clúster se realiza mediante un único comando que:
+
+- Compila
+- Empaqueta
+- Levanta toda la red de servicios
+
+---
+
+## Paso 1: Levantar el Clúster Backend
+
+Abre una terminal en la raíz del proyecto, donde se encuentra el archivo:
+
+```bash
+docker-compose.yml
+```
+
+Ejecuta el siguiente comando:
+
+```bash
+docker-compose up --build
+```
+
+Espera a que la terminal confirme que los tres servicios están iniciados y escuchando peticiones:
+
+- `moodle-mock-1`
+- `sce-mock-1`
+- `servidor-central-1`
+
+---
+
+## Paso 2: Ejecutar el Cliente Web
+
+1. Navega a la carpeta:
+
+```bash
+cliente-web
+```
+
+2. Haz doble clic en el archivo:
+
+```bash
+index.html
+```
+
+3. Inicia sesión con las credenciales de prueba:
+
+```text
+Usuario: padre123
+Contraseña: admin
+```
+
+---
+
+# Protocolos de Comunicación y Seguridad Implementados
+
+Para garantizar el cumplimiento normativo de la prueba de concepto, la arquitectura fue securizada por capas dependiendo del canal de comunicación.
+
+---
+
+## REST / JSON + JWT (Capa de Aplicación)
+
+Utilizado para la consulta síncrona:
+
+```text
+Cliente -> Servidor Central
+```
+
+### Motivos de elección
+
+- Estándar ampliamente utilizado en aplicaciones web
+- Arquitectura stateless
+- Fácil integración con frontend
+
+### Seguridad implementada
+
+Se utiliza autenticación mediante **JSON Web Tokens (JWT)**, garantizando que únicamente usuarios autenticados puedan consumir la API.
+
+---
+
+## WebSockets + Autenticación por Token
+
+Utilizado para comunicación asíncrona en tiempo real:
+
+```text
+Servidor Central -> Cliente
+```
+
+### Beneficios
+
+- Implementa patrón observador
+- Permite envío de alertas en tiempo real
+- Evita saturación de red causada por polling constante
+
+---
+
+## gRPC + TLS (Capa de Transporte)
+
+Utilizado para el proceso Batch nocturno:
+
+```text
+Servidor Central -> Mock SCE
+```
+
+### Motivos de elección
+
+- Uso de Protocol Buffers
+- Serialización binaria eficiente
+- Reducción significativa del ancho de banda
+- Alto rendimiento para transmisión masiva de registros
+
+### Seguridad implementada
+
+El canal Backend-to-Backend está protegido mediante certificados **OpenSSL (TLS)** inyectados directamente en el empaquetado `.jar` de Java.
+
+Esto garantiza:
+
+- Cifrado de extremo a extremo
+- Protección contra interceptaciones de red
+- Comunicación segura entre microservicios
+
+---
+
+# Tecnologías Utilizadas
+
+## Backend
+
+- Spring Boot
+- Node.js
+- gRPC
+- JWT
+- WebSockets
+
+## Infraestructura
+
+- Docker
+- Docker Compose
+
+## Frontend
+
+- HTML5
+- CSS3
+- JavaScript
+
+---
+
+# Objetivo Académico
+
+Esta prueba de concepto fue desarrollada con fines académicos para demostrar:
+
+- Integración de sistemas distribuidos
+- Comunicación síncrona y asíncrona
+- Seguridad multicapa
+- Orquestación de contenedores
+- Interoperabilidad entre tecnologías heterogéneas
+
+---
