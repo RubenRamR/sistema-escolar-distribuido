@@ -63,24 +63,25 @@ public class SincronizadorBatchService {
             System.err.println("[gRPC] Error al contactar SCE: " + e.getMessage());
         } finally
         {
-            channel.shutdown();
-            try
+            if (channel != null)
             {
-                channel.awaitTermination(5, TimeUnit.SECONDS);
-            } catch (InterruptedException ignored)
-            {
+                channel.shutdown();
+                try
+                {
+                    channel.awaitTermination(5, TimeUnit.SECONDS);
+                } catch (InterruptedException ignored)
+                {
+                }
             }
         }
     }
 
-    // Utiliza el certificado de OpenSSL para crear de conexion seguro
     public ManagedChannel crearCanalSeguro() throws SSLException, IOException {
-        // Apuntamos al certificado que acabamos de generar utilizando openssl
-        File certChainFile = new ClassPathResource("server.crt").getFile();
-
-        return NettyChannelBuilder.forAddress("localhost", 50051)
-                // Configurar contexto SSL para que confie en el cerftificado autofirmado
-                .sslContext(GrpcSslContexts.forClient().trustManager(certChainFile).build())
+        java.io.InputStream certStream = new ClassPathResource("server.crt").getInputStream();
+        
+        return NettyChannelBuilder.forAddress("sce-mock", 50051)
+                .overrideAuthority("localhost")
+                .sslContext(GrpcSslContexts.forClient().trustManager(certStream).build())
                 .build();
     }
 

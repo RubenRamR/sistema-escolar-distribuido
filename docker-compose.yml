@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  moodle-mock:
+    build: ./mocks
+    ports:
+      - "9090:9090"
+    networks:
+      - escuela-net
+
+  sce-mock:
+    build: ./mock-sce
+    ports:
+      - "50051:50051"
+    networks:
+      - escuela-net
+
+  servidor-central:
+    build: ./servidor-central/servidor-central 
+    ports:
+      - "8080:8080"
+    depends_on:
+      - moodle-mock
+      - sce-mock
+    networks:
+      - escuela-net
+
+networks:
+  escuela-net:
+    driver: bridge

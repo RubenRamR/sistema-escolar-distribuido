@@ -30,16 +30,20 @@ public class ProgresoController {
     @GetMapping("/api/padres/progreso")
     public Object obtenerProgresoAcademico() {
         System.out.println("[Servidor Central] Recibiendo petición de la App Móvil/Web...");
-        
-        String urlMoodleMock = "http://localhost:9090/api/calificaciones";
+
+        String urlMoodleMock = "http://moodle-mock:9090/api/calificaciones";
         RestTemplate restTemplate = new RestTemplate();
-        
-        try {
+
+        try
+        {
             CalificacionDTO respuestaMoodle = restTemplate.getForObject(urlMoodleMock, CalificacionDTO.class);
-            
-            if (respuestaMoodle != null && respuestaMoodle.materias != null) {
-                for (CalificacionDTO.MateriaDTO materia : respuestaMoodle.materias) {
-                    if (materia.calificacion < 6.0) {
+
+            if (respuestaMoodle != null && respuestaMoodle.materias != null)
+            {
+                for (CalificacionDTO.MateriaDTO materia : respuestaMoodle.materias)
+                {
+                    if (materia.calificacion < 6.0)
+                    {
                         String mensajeAlerta = "¡Atención! Rendimiento bajo detectado en "
                                 + materia.nombre
                                 + " (Calificación: " + materia.calificacion + ")";
@@ -51,8 +55,9 @@ public class ProgresoController {
             }
 
             return respuestaMoodle;
-            
-        } catch (Exception e) {
+
+        } catch (Exception e)
+        {
             System.err.println("Error: " + e.getMessage());
             return "{\"error\": \"No se pudo conectar con el sistema de calificaciones\"}";
         }

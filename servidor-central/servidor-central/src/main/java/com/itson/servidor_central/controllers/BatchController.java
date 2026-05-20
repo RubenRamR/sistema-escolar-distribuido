@@ -26,23 +26,25 @@ public class BatchController {
         System.out.println("\n[Batch] Recibida petición de sincronización batch...");
 
         RestTemplate restTemplate = new RestTemplate();
-        String urlMoodle = "http://localhost:9090/api/calificaciones";
-
-        try {
+        String urlMoodle = "http://moodle-mock:9090/api/calificaciones";
+        try
+        {
             CalificacionDTO datos = restTemplate.getForObject(urlMoodle, CalificacionDTO.class);
 
             boolean maestroHistoriaAtrasado = true; // Simulación lógica
-            if (maestroHistoriaAtrasado) {
+            if (maestroHistoriaAtrasado)
+            {
                 System.err.println("[ALERTA ADMINISTRATIVA] Se detectó que el profesor de 'Historia' no ha subido calificaciones en el tiempo acordado. Registrando reporte en el sistema...");
             }
 
             sincronizador.enviarLote(datos.materias, datos.nombre);
-            
+
             System.out.println("[Batch] Lote procesado y transmitido vía gRPC exitosamente.\n");
-            
+
             return "{\"status\": \"success\", \"mensaje\": \"Lote enviado al SCE correctamente. Alertas de maestros procesadas.\"}";
 
-        } catch (Exception e) {
+        } catch (Exception e)
+        {
             System.err.println("[Batch] Error en la sincronización: " + e.getMessage());
             return "{\"status\": \"error\", \"mensaje\": \"" + e.getMessage() + "\"}";
         }
